@@ -5,6 +5,10 @@ const fs = require('fs');
 const zmq = require('zeromq/v5-compat');
 const numWorkers = require('os').cpus().length;
 
+
+
+// https://qiita.com/chiral/items/65c784db68582d45ca6e
+// ?????
 if (cluster.isMaster) {
     // Create a PUSH socket and bind it to an IPC endpoint
     const masterPusher = zmq.socket('push');
