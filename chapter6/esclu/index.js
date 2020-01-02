@@ -31,7 +31,11 @@ program
 program
 .command('url [path]')
 .description('generate the URL for the options and path (default is /)')
-.action((path = '/') => console.log(fullUrl(path)));
+.action((path = '/') => {
+    cmd = 'url';
+
+    console.log(fullUrl(path));
+});
 
 program
 .command('get [path]')
@@ -54,6 +58,43 @@ program
             console.log(body);
         }
     });
+});
+
+const handleResponse = (err, res, body) => {
+    if (program.json) {
+        console.log(JSON.stringify(err || body));
+    } else {
+        if (err) throw err;
+        console.log(body);
+    }
+};
+
+program
+.command('create-index')
+.description('create an index')
+.action(() => {
+    cmd = 'create-index';
+
+    if (!program.index) {
+        const msg = 'No index specified! Use --index <name>';
+        if (!program.json) throw Error(msg);
+        console.log(JSON.stringify({error: msg}));
+        return;
+    }
+
+    request.put(fullUrl(), handleResponse);
+});
+
+program
+.command('list-indices')
+.alias('li')
+.description('get a list of indices in this cluster')
+.action( () => {
+    cmd = 'list-indices';
+
+    const path = program.json ? '_all' : '_cat/indices?v';
+
+    request( { url: fullUrl(path), json: program.json }, handleResponse);
 });
 
 // https://github.com/tj/commander.js#specify-the-argument-syntax
