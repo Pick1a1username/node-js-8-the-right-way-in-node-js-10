@@ -112,13 +112,9 @@ module.exports = (app, es) => {
         // Determine the bundle's URL based on the es config object and the request parameters.
         const bundleUrl = `${url}/${req.params.id}`;
 
-        console.log('aaaaa');
-
         // Wrap your await call in a try/catch block to handle any errors.
         try {
-            console.log('The beginning of try');
-
-            // Request the bundle and book in parallel.
+            // Request the bundle.
             const [bundleRes] = await Promise.all([
                 rp({url: bundleUrl, json: true}),
             ]);
@@ -126,9 +122,6 @@ module.exports = (app, es) => {
             // Extract bundle and book information from responses.
             const {_source: bundle} = bundleRes;
             
-            console.log(bundle);
-
-
             // Use await with a call to rp to suspend until the deletion is completed.
             const esResBody = await rp.delete({
                 url: bundleUrl,
@@ -139,6 +132,49 @@ module.exports = (app, es) => {
             });
             
             res.status(200).json(esResBody);
+        } catch (esResErr) {
+            res.status(esResErr.statusCode || 502).json(esResErr.error);
+        }
+    });
+
+    /**
+     * Remove a book from a bundle.
+     * curl -X DELETE http://<host>:<port>/api/bundle/<id>/book/<pgid>
+     */
+    app.delete('/api/bundle/:id/book/:pgid', async (req, res) => {
+        const bundleUrl = `${url}/${req.params.id}`;
+
+        try {
+            // Use await with rp to retrieve the bundle object from Elasticsearch.
+            const [bundleRes] = await Promise.all([
+                rp({url: bundleUrl, json: true})
+            ]);
+
+            // Find the index of the book within the bundle.books list.
+            const {_source: bundle} = bundleRes;
+
+            const idx = bundle.books.findIndex(book => book.id === req.params.pgid);
+
+            // If the book doesn't exist, return 409.
+            if (idx === -1) {
+                throw {
+                    statusCode: 409,
+                    error: "The bundle doesn't contain the book."
+                }
+            }
+
+            // Remove the book from the list.
+            bundle.books.splice(idx, 1);
+
+            // PUT the updated bundle object back into the Elasticsearch index, again with await and rp.
+            const esResBody = await rp.put({
+                url: bundleUrl,
+                body: bundle,
+                json: true,
+            });
+            
+            res.status(200).json(esResBody);
+
         } catch (esResErr) {
             console.log(esResErr.statusCode);
             res.status(esResErr.statusCode || 502).json(esResErr.error);
