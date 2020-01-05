@@ -58,6 +58,17 @@ const listBundles = bundles => {
         const name = form.querySelector('input').value;
         addBundle(name);
     });
+
+    const deleteButtons = mainElement.querySelectorAll('button.btn-secondary');
+    console.log(deleteButtons);
+
+    for (let i = 0; i < deleteButtons.length; i++) {
+        const deleteButton = deleteButtons[i];
+        deleteButton.addEventListener('click', event => {
+            deleteBundle(deleteButton.getAttribute('data-bundle-id'));
+        });
+    }
+
 };
 
 /**
@@ -78,7 +89,6 @@ const addBundle = async (name) => {
 
         // Add the new bundle.
         const url = `/api/bundle?name=${encodeURIComponent(name)}`;
-        console.log(url);
         const res = await fetch(url, {method: 'POST'});
         const resBody = await res.json();
 
@@ -87,6 +97,51 @@ const addBundle = async (name) => {
         listBundles(bundles);
 
         showAlert(`Bundle "${name}" created!`, 'success');
+    } catch (err) {
+        showAlert(err);
+    }
+};
+
+
+
+
+/**
+ * Delete the bundle with the specified ID, then list bundles.
+ */
+const deleteBundle = async (bundleId) => {
+    console.log('deleteBundle() triggered!');
+    try {
+        // Delete the bundle, then render the updated list with listBundles().
+
+        // Use getBundles() to retrieve the current list of bundles.
+        const bundles = await getBundles();
+
+        // Find the index of the selected bundleId in the list.
+        // (If there is no matching bundle, throw an exception explaining the problem.)
+        const idx = bundles.findIndex(bundle => bundle.id === bundleId);
+
+        if (idx === -1) {
+            throw {
+                statusCode: 409,
+                error: "The bundle doesn't exist."
+            }
+        }
+
+        // Remove the book from the list.
+        // ???
+
+        // Issue an HTTP DELETE request for the specified bundleId using fetch().
+        const url = `/api/bundle/${bundleId}`;
+        const res = await fetch(url, {method: 'DELETE'});
+        const resBody = await res.json();
+
+        // Remove the bundle from the list by calling splice(), passing in the found index.
+        bundles.splice(idx, 1);
+
+        // Render the updated list using listBundles() and show a success message using showAlert().
+        listBundles(bundles);
+
+        showAlert(`Bundle deleted!`, 'success');
     } catch (err) {
         showAlert(err);
     }
