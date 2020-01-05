@@ -1,6 +1,7 @@
 'use strict';
 
 import './node_modules/bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap';
 
 document.body.innerHTML = `
 <div class="container">
