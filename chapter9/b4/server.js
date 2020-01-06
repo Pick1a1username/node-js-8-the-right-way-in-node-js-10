@@ -34,6 +34,23 @@ const morgan = require('morgan');
 
 const app = express();
 
+// Setup Express sessions.
+const expressSession = require('express-session');
+
+if (isDev) {
+  // Use FileStore in development mode.
+  const FileStore = require('session-file-store')(expressSession);
+
+  app.use(expressSession({
+    resave: false,
+    saveUninitialized: true,
+    secret: 'unguessable',
+    store: new FileStore(),
+  }));
+} else {
+  // Use RedisStore in production mode.
+}
+
 app.use(morgan('dev'));
 
 app.get('/api/version', (req, res) => res.status(200).json(pkg.version));
