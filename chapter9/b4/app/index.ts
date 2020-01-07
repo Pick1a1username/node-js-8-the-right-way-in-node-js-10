@@ -3,6 +3,9 @@ import 'bootstrap';
 import * as templates from './templates.ts';
 import { addBundleForm } from './templates';
 
+import '../node_modules/bootstrap-social/bootstrap-social.css';
+import '../node_modules/font-awesome/css/font-awesome.min.css';
+
 // Page setup
 document.body.innerHTML = templates.main();
 const mainElement = document.body.querySelector('.b4-main');
