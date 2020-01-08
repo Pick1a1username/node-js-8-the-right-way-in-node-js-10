@@ -1,10 +1,33 @@
 import * as Handlebars from '../node_modules/handlebars/dist/handlebars';
 
 export const main = Handlebars.compile(`
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed"
+                data-toggle="collapse" data-target=".navbar-collapse"
+                aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#welcome">B4</a>
+        </div>
+    <!-- Insert navbar here. -->
+    </div><!-- /.container-fluid -->
+    {{#if session.auth}}
+        <div class="collapse navbar-collapse">
+        <ul class="nav navbar-nav navbar-right">
+        <li><a href="#list-bundles">My Bundles</a></li>
+        <li><a href="/auth/signout">Sign Out</a></li>
+    </ul>
+    </div><!-- /.navbar-collapse -->
+    {{/if}}
+</nav>
 <div class="container">
-<h1>B4 - Book Bundler</h1>
-<div class="b4-alerts"></div>
-<div class="b4-main"></div>
+    <div class="b4-alerts"></div>
+    <div class="b4-main"></div>
 </div>
 `);
 
@@ -12,7 +35,6 @@ export const welcome = Handlebars.compile(`
 <div class="jumbotron">
     <h1>Welcome!</h1>
     <p>B4 is an application for creating book bundles.</p>
-</div>
 {{#if session.auth}}
     <p>View your <a href="#list-bundles">bundles</a>.</p>
 {{else}}
@@ -34,6 +56,7 @@ export const welcome = Handlebars.compile(`
         </div>
     </div>
 {{/if}}
+</div>
 `);
 
 export const alert = Handlebars.compile(`

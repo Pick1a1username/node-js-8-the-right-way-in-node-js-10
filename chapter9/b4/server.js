@@ -37,6 +37,17 @@ const app = express();
 // Setup Express sessions.
 const expressSession = require('express-session');
 
+// Passport Authentication.
+// The passport.session middleware must come after the expressSession.
+const passport = require('passport');
+passport.serializeUser((profile, done) => done(null, {
+  id: profile.id,
+  provider: profile.provider,
+}));
+passport.deserializeUser((user, done) => done(null, user));
+app.use(passport.initialize());
+app.use(passport.session());
+
 if (isDev) {
   // Use FileStore in development mode.
   const FileStore = require('session-file-store')(expressSession);
@@ -67,5 +78,16 @@ if (isDev) {
 } else {
   app.use(express.static('dist'));
 }
+
+// Return information about the current user session.
+app.get('/api/session', (req, res) => {
+  const session = {auth: req.isAuthenticated()};
+  res.status(200).json(session);
+});
+
+app.get('/auth/signout', (req, res) => {
+  req.logout();
+  res.redirect('/');
+});
 
 app.listen(servicePort, () => console.log('Ready.'));

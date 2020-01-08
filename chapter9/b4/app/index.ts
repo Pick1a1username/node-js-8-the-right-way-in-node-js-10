@@ -7,25 +7,25 @@ import '../node_modules/bootstrap-social/bootstrap-social.css';
 import '../node_modules/font-awesome/css/font-awesome.min.css';
 
 // Page setup
-document.body.innerHTML = templates.main();
-const mainElement = document.body.querySelector('.b4-main');
-const alertsElement = document.body.querySelector('.b4-alerts');
+// document.body.innerHTML = templates.main();
 
-// mainElement.innerHTML = templates.welcome();
-// alertsElement.innerHTML = templates.alert({
-//     type: 'info',
-//     message: 'Handlebars is working!',
-// });
+
 
 /**
  * Use Window location hash to show the specified view.
  */
 const showView = async () => {
+    const mainElement = document.body.querySelector('.b4-main');
     const [view, ...params] = window.location.hash.split('/');
 
     switch (view) {
         case '#welcome':
-            mainElement.innerHTML = templates.welcome();
+            const session = await fetchJSON('/api/session');
+            mainElement.innerHTML = templates.welcome({session});
+            // mainElement.innerHTML = templates.welcome();
+            // if (session.error) {
+            //     showAlert(session.error);
+            // }
             break;
         case '#list-bundles':
             const bundles = await getBundles();
@@ -37,9 +37,9 @@ const showView = async () => {
     }
 };
 
-window.addEventListener('hashchange', showView);
+// window.addEventListener('hashchange', showView);
 
-showView().catch(err => window.location.hash = '#welcome');
+// showView().catch(err => window.location.hash = '#welcome');
 
 const getBundles = async () => {
     const esRes = await fetch('/es/b4/bundle/_search?size=1000');
@@ -52,6 +52,7 @@ const getBundles = async () => {
 };
 
 const listBundles = bundles => {
+    const mainElement = document.body.querySelector('.b4-main');
     mainElement.innerHTML = templates.addBundleForm() + templates.listBundles({bundles});
 
     const form = mainElement.querySelector('form');
@@ -78,6 +79,7 @@ const listBundles = bundles => {
  * Show an alert to the user.
  */
 const showAlert = (message, type = 'danger') => {
+    const alertsElement = document.body.querySelector('.b4-alerts');
     const html = templates.alert({type, message});
     alertsElement.insertAdjacentHTML('beforeend', html);
 };
@@ -149,3 +151,26 @@ const deleteBundle = async (bundleId) => {
         showAlert(err);
     }
 };
+
+
+/**
+ * Convenience method to fetch and decode JSON.
+ */
+const fetchJSON = async (url, method = 'GET') => {
+    try {
+        const response = await fetch(url, {method, credentials: 'same-origin'});
+        return response.json();
+    } catch (error) {
+        return {error};
+    }
+};
+
+
+// Page setup.
+(async () => {
+    const session = await fetchJSON('/api/session');
+    // console.log(JSON.stringify(session));
+    document.body.innerHTML = templates.main({session});
+    window.addEventListener('hashchange', showView);
+    showView().catch(err => window.location.hash = '#welcome');
+})();
