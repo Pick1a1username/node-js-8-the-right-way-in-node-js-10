@@ -1,21 +1,20 @@
 import * as Handlebars from '../node_modules/handlebars/dist/handlebars';
 
 export const main = Handlebars.compile(`
-<nav class="navbar navbar-default">
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed"
+                <button type="button" class="navbar-toggle collapsed"
                 data-toggle="collapse" data-target=".navbar-collapse"
                 aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="#welcome">B4</a>
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#welcome">B4</a>
         </div>
-    <!-- Insert navbar here. -->
-    </div><!-- /.container-fluid -->
+    </div>
     {{#if session.auth}}
         <div class="collapse navbar-collapse">
         <ul class="nav navbar-nav navbar-right">
