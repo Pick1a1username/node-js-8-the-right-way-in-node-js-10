@@ -11,6 +11,9 @@ const pkg = require('./package.json');
 const {URL} = require('url');
 const path = require('path');
 
+// This is for passport-local.
+const db = require('./db');
+
 // nconf configuration.
 const nconf = require('nconf');
 nconf
@@ -40,13 +43,43 @@ const expressSession = require('express-session');
 // Passport Authentication.
 // The passport.session middleware must come after the expressSession.
 const passport = require('passport');
-passport.serializeUser((profile, done) => done(null, {
-  id: profile.id,
-  provider: profile.provider,
+
+const Strategy = require('passport-local').Strategy;
+
+// https://dev.to/ganeshmani/node-authentication-using-passport-js-part-1-53k7
+passport.use('local-signup', new Strategy(
+  function(username, password, done) {
+      db.users.findByUsername(username, function(err, user) {
+          if (err) { return done(err); }
+          if (!user) { return done(null, false, { message: "Incorrect username."}); }
+          if (user.password != password) { return done(null, false, { message: "Incorrect password"}); }
+          return done(null, user);
+  });
 }));
-passport.deserializeUser((user, done) => done(null, user));
+
+// passport.serializeUser((profile, done) => done(null, {
+//   id: profile.id,
+//   provider: profile.provider,
+// }));
+passport.serializeUser(function(user, done) {
+    done(null, user.id);
+});
+
+// passport.deserializeUser((user, done) => done(null, user));
+passport.deserializeUser(function(id, done) {
+    db.users.findById(id, function (err, user) {
+        if (err) { return done(err); }
+        done(null, user);
+    });
+});
+
+
 app.use(passport.initialize());
 app.use(passport.session());
+
+// This is necessary for passport-local!!!!!!!!!!!1
+app.use(require('body-parser').urlencoded({ extended: true }));
+
 
 if (isDev) {
   // Use FileStore in development mode.
@@ -78,6 +111,27 @@ if (isDev) {
 } else {
   app.use(express.static('dist'));
 }
+
+
+app.post('/auth/local', 
+  passport.authenticate('local-signup', { failureRedirect: '/' }),
+  function(req, res) {
+    res.redirect('/');
+  });
+
+// app.post('/auth/local', function(req, res, next) {
+//   passport.authenticate('local-signup', function(err, user, info) {
+//     console.log(err);
+//     console.log(user);
+//     console.log(info);
+//     if (err) { return next(err); }
+//     if (!user) { return res.redirect('/'); }
+//     req.logIn(user, function(err) {
+//       if (err) { return next(err); }
+//       return res.redirect('/');
+//     });
+//   })(req, res, next);
+// });
 
 // Return information about the current user session.
 app.get('/api/session', (req, res) => {

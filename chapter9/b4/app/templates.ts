@@ -40,6 +40,19 @@ export const welcome = Handlebars.compile(`
     <p>Sign in with any of these services to begin.</p>
     <div class="row">
         <div class="col-sm-6">
+            <form class="form-signin" action="/auth/local" method="POST">
+                <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+                <label for="inputEmail" class="sr-only">Email address</label>
+                <input type="text" name="username" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
+                <label for="inputPassword" class="sr-only">Password</label>
+                <input type="password" name="password" id="inputPassword" class="form-control" placeholder="Password" required>
+                <div class="checkbox mb-3">
+                <label>
+                    <input type="checkbox" value="remember-me"> Remember me
+                </label>
+                </div>
+                <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+            </form>
             <a href="/auth/facebook" class="btn btn-block btn-social btn-facebook">
                 <span class="fa fa-facebook"></span>
                 Sign in with Facebook
