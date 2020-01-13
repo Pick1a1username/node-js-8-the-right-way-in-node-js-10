@@ -1,10 +1,9 @@
 var records = [
-    { id: 1, username: 'jack', password: 'secret', displayName: 'Jack', emails: [ { value: 'jack@example.com' } ] }
-  , { id: 2, username: 'jill', password: 'birthday', displayName: 'Jill', emails: [ { value: 'jill@example.com' } ] }
+    { id: 1, username: 'jack', password: 'secret', displayName: 'Jack', emails: [ { value: 'jack@example.com' } ], provider: 'local' }
+  , { id: 2, username: 'jill', password: 'birthday', displayName: 'Jill', emails: [ { value: 'jill@example.com' } ], provider: 'local' }
 ];
 
 exports.findById = function(id, cb) {
-  console.log('hello-users-1');
   process.nextTick(function() {
     var idx = id - 1;
     if (records[idx]) {
@@ -16,7 +15,6 @@ exports.findById = function(id, cb) {
 }
 
 exports.findByUsername = function(username, cb) {
-  console.log('hello-users-2');
   process.nextTick(function() {
     for (var i = 0, len = records.length; i < len; i++) {
       var record = records[i];
