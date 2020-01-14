@@ -162,4 +162,6 @@ app.get('/auth/signout', (req, res) => {
   res.redirect('/');
 });
 
+app.use('/api', require('./lib/bundle.js')(nconf.get('es')));
+
 app.listen(servicePort, () => console.log('Ready.'));
