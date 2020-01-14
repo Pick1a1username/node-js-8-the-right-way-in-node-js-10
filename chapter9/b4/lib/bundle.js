@@ -3,104 +3,181 @@
  */
 'use strict';
 
-const express = require('express');
 const rp = require('request-promise');
 
-const getUserKey = ({ user: {provider, id} }) => `${provider}-${id}`;
-
-module.exports = es => {
+module.exports = (app, es) => {
     const url = `http://${es.host}:${es.port}/${es.bundles_index}/bundle`;
 
-    const router = express.Router();
-
-    /**
-     * All of these APIs require the user to have authenticated.
-     */
-    router.use((req, res, next) => {
-        if (!req.isAuthenticated()) {
-            res.status(403).json({
-                error: 'You must sign in to use this service.',
-            });
-            return;
-        }
-        next();
-    });
-
-    /**
-     * List bundles for the currently authenticated user.
-     */
-    router.get('/list-bundles', async (req, res) => {
-        try {
-            const esReqBody = {
-                size: 1000,
-                query: {
-                    match: {
-                        userKey: getUserKey(req),
-                    }
-                },
-            };
-
-            const options = {
-                url: `${url}/_search`,
-                json: true,
-                body: esReqBody,
-            };
-
-            const esResBody = await rp(options);
-
-            const bundles = esResBody.hits.hits.map(hit => ({
-                id: hit._id,
-                name: hit._source.name,
-            }));
-
-            res.status(200).json(bundles);
-        } catch (err) {
-            res.status(err.statusCode || 502).json(err.error || err);
-        }
-    });
-    
     /**
      * Create a new bundle with the specified name.
+     * curl -X POST http://<host>:<port>/api/bundle?name=<name>
      */
-    router.post('/bundle', async (req, res) => {
+    app.post('/api/bundle', (req, res) => {
+        const bundle = {
+            name: req.query.name || '',
+            books: [],
+        };
+
+        rp.post( { url, body: bundle, json: true})
+        .then(esResBody => res.status(201).json(esResBody))
+        .catch(({error}) => res.status(error.status || 502).json(error));
+    });
+
+    /**
+     * Retrieve a given bundle.
+     * curl http://<host>:<port>/api/bundle/<id>
+     */
+    app.get('/api/bundle/:id', async (req, res) => {
+        const options = {
+            url: `${url}/${req.params.id}`,
+            json: true,
+        };
+
         try {
-            const bundle = {
-                name: req.query.name || '',
-                userKey: getUserKey(req),
-                books: [],
-            };
-
-            const esResBody = await rp.post({url, body: bundle, json: true});
-
-            res.status(201).json(esResBody);
-        } catch (err) {
-            res.status(err.statusCode || 502).json(err.error || err);
+            const esResBody = await rp(options);
+            res.status(200).json(esResBody);
+        } catch (esResErr) {
+            res.status(esResErr.statusCode || 502).json(esResErr.error);
         }
     });
 
     /**
-     * retrieve a given bundle.
+     * Set the specified bundle's name with the specified name
+     * curl -X PUT http://<host>:<port>/api/bundle/<id>/name/<name>
      */
-    router.get('/bundle/:id', async (req, res) => {
+    app.put('/api/bundle/:id/name/:name', async (req, res) => {
+        const bundleUrl = `${url}/${req.params.id}`;
+
         try {
-            const options = {
-                url: `${url}/${req.params.id}`,
-                json: true,
-            };
+            const bundle = (await rp({url: bundleUrl, json: true}))._source;
 
-            const {_source: bundle} = await rp(options);
+            bundle.name = req.params.name;
 
-            if (bundle.userKey !== getUserKey(req)) {
-                throw { statusCode: 403,
-                error: 'You are not authorized to view this bundle.',
-                };
-            }
-
-            res.status(200).json({id: req.params.id, bundle});
-        } catch (err) {
-            res.status(err.statusCode || 502).json(err.error || err);
+            const esResBody = await rp.put({url: bundleUrl, body: bundle, json: true});
+            res.status(200).json(esResBody);
+        } catch (esResErr) {
+            res.status(esResErr.statusCode || 502).json(esResErr.error);
         }
     });
-    
-    return router;
-}
+
+    /**
+     * Put a book into a bundle by its id.
+     * curl -X PUT http://<host>:<port>/api/bundle/<id>/book/<pgid>
+     */
+    app.put('/api/bundle/:id/book/:pgid', async (req, res) => {
+        const bundleUrl = `${url}/${req.params.id}`;
+
+        const bookUrl =
+            `http://${es.host}:${es.port}` +
+            `/${es.books_index}/book/${req.params.pgid}`;
+        
+        try {
+            // Request the bundle and book in parallel.
+            const [bundleRes, bookRes] = await Promise.all([
+                rp({url: bundleUrl, json: true}),
+                rp({url: bookUrl, json: true}),
+            ]);
+
+            // Extract bundle and book information from responses.
+            const {_source: bundle, _version: version} = bundleRes;
+            const {_source: book} = bookRes;
+            
+            const idx = bundle.books.findIndex(book => book.id === req.params.pgid);
+            if (idx === -1) {
+                bundle.books.push({
+                    id: req.params.pgid,
+                    title: book.title,
+                });
+            }
+
+            // Put the updated bundle back in the index.
+            const esResBody = await rp.put({
+                url: bundleUrl,
+                // qs: { version },  // This part doesn't need. If this part is used, the error occurs.
+                body: bundle,
+                json: true,
+            });
+            
+            res.status(200).json(esResBody);
+        } catch (esResErr) {
+            res.status(esResErr.statusCode || 502).json(esResErr.error);
+        }
+    });
+
+    /**
+     * Delete a bundle entirely.
+     * curl -X DELETE http://<host>:<port>/api/bundle/<id>
+     */
+    app.delete('/api/bundle/:id', async (req, res) => {
+        // Determine the bundle's URL based on the es config object and the request parameters.
+        const bundleUrl = `${url}/${req.params.id}`;
+
+        // Wrap your await call in a try/catch block to handle any errors.
+        try {
+            // Request the bundle.
+            const [bundleRes] = await Promise.all([
+                rp({url: bundleUrl, json: true}),
+            ]);
+
+            // Extract bundle and book information from responses.
+            const {_source: bundle} = bundleRes;
+            
+            // Use await with a call to rp to suspend until the deletion is completed.
+            const esResBody = await rp.delete({
+                url: bundleUrl,
+                body: {
+                    _id: req.params.id
+                },
+                json: true,
+            });
+            
+            res.status(200).json(esResBody);
+        } catch (esResErr) {
+            res.status(esResErr.statusCode || 502).json(esResErr.error);
+        }
+    });
+
+    /**
+     * Remove a book from a bundle.
+     * curl -X DELETE http://<host>:<port>/api/bundle/<id>/book/<pgid>
+     */
+    app.delete('/api/bundle/:id/book/:pgid', async (req, res) => {
+        const bundleUrl = `${url}/${req.params.id}`;
+
+        try {
+            // Use await with rp to retrieve the bundle object from Elasticsearch.
+            const [bundleRes] = await Promise.all([
+                rp({url: bundleUrl, json: true})
+            ]);
+
+            // Find the index of the book within the bundle.books list.
+            const {_source: bundle} = bundleRes;
+
+            const idx = bundle.books.findIndex(book => book.id === req.params.pgid);
+
+            // If the book doesn't exist, return 409.
+            if (idx === -1) {
+                throw {
+                    statusCode: 409,
+                    error: "The bundle doesn't contain the book."
+                }
+            }
+
+            // Remove the book from the list.
+            bundle.books.splice(idx, 1);
+
+            // PUT the updated bundle object back into the Elasticsearch index, again with await and rp.
+            const esResBody = await rp.put({
+                url: bundleUrl,
+                body: bundle,
+                json: true,
+            });
+            
+            res.status(200).json(esResBody);
+
+        } catch (esResErr) {
+            console.log(esResErr.statusCode);
+            res.status(esResErr.statusCode || 502).json(esResErr.error);
+        }
+    });
+};
