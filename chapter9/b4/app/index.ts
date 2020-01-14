@@ -28,8 +28,13 @@ const showView = async () => {
             // }
             break;
         case '#list-bundles':
-            const bundles = await getBundles();
-            listBundles(bundles);
+            try {
+                const bundles = await getBundles();
+                listBundles(bundles);
+            } catch (err) {
+                showAlert(err);
+                window.location.hash = '#welcome';
+            }
             break;
         default:
             // Unrecognized view.
@@ -41,15 +46,16 @@ const showView = async () => {
 
 // showView().catch(err => window.location.hash = '#welcome');
 
-const getBundles = async () => {
-    const esRes = await fetch('/es/b4/bundle/_search?size=1000');
-    const esResBody = await esRes.json();
+// This is deprecated?
+// const getBundles = async () => {
+//     const esRes = await fetch('/es/b4/bundle/_search?size=1000');
+//     const esResBody = await esRes.json();
 
-    return esResBody.hits.hits.map(hit => ({
-        id: hit._id,
-        name: hit._source.name,
-    }));
-};
+//     return esResBody.hits.hits.map(hit => ({
+//         id: hit._id,
+//         name: hit._source.name,
+//     }));
+// };
 
 const listBundles = bundles => {
     const mainElement = document.body.querySelector('.b4-main');
@@ -75,6 +81,7 @@ const listBundles = bundles => {
 
 };
 
+
 /**
  * Show an alert to the user.
  */
@@ -94,7 +101,8 @@ const addBundle = async (name) => {
 
         // Add the new bundle.
         const url = `/api/bundle?name=${encodeURIComponent(name)}`;
-        const res = await fetch(url, {method: 'POST'});
+        // const res = await fetch(url, {method: 'POST'});
+        const res = await fetchJSON(url, 'POST');
         const resBody = await res.json();
 
         // Merge the new bundle into the original results and show them.
@@ -163,6 +171,15 @@ const fetchJSON = async (url, method = 'GET') => {
     } catch (error) {
         return {error};
     }
+};
+
+const getBundles = async () => {
+    const bundles = await fetchJSON('/api/list-bundles');
+
+    if (bundles.error) {
+        throw bundles.error;
+    }
+    return bundles;
 };
 
 
