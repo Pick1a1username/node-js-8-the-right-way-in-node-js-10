@@ -131,6 +131,8 @@ const deleteBundle = async (bundleId) => {
         // Use getBundles() to retrieve the current list of bundles.
         const bundles = await getBundles();
 
+        console.log(bundles);
+
         // Find the index of the selected bundleId in the list.
         // (If there is no matching bundle, throw an exception explaining the problem.)
         const idx = bundles.findIndex(bundle => bundle.id === bundleId);

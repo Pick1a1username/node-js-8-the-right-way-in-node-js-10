@@ -101,6 +101,32 @@ module.exports = es => {
             res.status(err.statusCode || 502).json(err.error || err);
         }
     });
+
+    /**
+     * delete a bundle
+     */
+    router.delete('/bundle/:id', async (req, res) => {
+        try {
+            const options = {
+                url: `${url}/${req.params.id}`,
+                json: true,
+            };
+
+            const {_source: bundle} = await rp.delete(options);
+
+            if (bundle.userKey !== getUserKey(req)) {
+                throw { statusCode: 403,
+                error: 'You are not authorized to view this bundle.',
+                };
+            }
+
+            res.status(200).json({id: req.params.id, bundle});
+        } catch (err) {
+            res.status(err.statusCode || 502).json(err.error || err);
+        }
+    });
     
     return router;
+
+
 }
