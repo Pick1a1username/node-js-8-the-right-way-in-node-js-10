@@ -24,3 +24,11 @@ curl -s -X PUT localhost:60702/api/bundle/$BUNDLE_ID/name/foo
 
 curl -s -X PUT localhost:60702/api/bundle/$BUNDLE_ID/book/pg132
 
+
+
+# ?
+
+curl -v -X GET -H "Content-Type: application/json" -d '{"userKey": 1 }' http://es:9200
+
+## Create a bundle for an user.
+curl -v -X POST -H "Content-Type: application/json" -d '{"name": "reading1", "userKey": "local-1", "books": [] }' http://es:9200/b4/bundle

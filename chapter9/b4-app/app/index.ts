@@ -28,10 +28,12 @@ const showView = async () => {
             // }
             break;
         case '#list-bundles':
+            // Todo: Don't get error when there's no bundle for an user.
             try {
                 const bundles = await getBundles();
                 listBundles(bundles);
             } catch (err) {
+                showAlert('failed at getBunfles();');
                 showAlert(err);
                 window.location.hash = '#welcome';
             }
@@ -177,6 +179,7 @@ const getBundles = async () => {
     const bundles = await fetchJSON('/api/list-bundles');
 
     if (bundles.error) {
+        console.log('bundles.error');
         throw bundles.error;
     }
     return bundles;
