@@ -5,11 +5,13 @@ services:
     image: node:10.18.1-jessie
     restart: always
     volumes:
-      - "../data:/data"
-      - "../b4:/app"
+      - "../data:/app/data"
+      - "../b4:/app/b4"
+      - "../databases:/app/databases"
+      - "../esclu:/app/esclu"
     ports:
       - "60702:60702"
-    working_dir: /app
+    working_dir: /app/b4
     command: npm start
     networks:
       - b4

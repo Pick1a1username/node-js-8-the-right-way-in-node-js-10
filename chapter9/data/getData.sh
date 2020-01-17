@@ -16,7 +16,7 @@ node rdf-to-bulk.js ../data/cache/epub/ > ../data/bulk_pg.ldj
 
 # Chapter ?
 
-curl -s -X POST localhost:60702/api/bundle?name=light%20reading
+curl -s -X POST localhost:60702/api/bundle?name=test_reading
 
 curl -s -X POST -d name=reading1 -d userKey=local-1 localhost:60702/api/bundle 
 
