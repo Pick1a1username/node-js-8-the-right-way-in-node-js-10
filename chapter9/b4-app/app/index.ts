@@ -65,12 +65,14 @@ const listBundles = bundles => {
 
     const form = mainElement.querySelector('form');
 
+    // Set create button.
     form.addEventListener('submit', event => {
         event.preventDefault();
         const name = form.querySelector('input').value;
         addBundle(name);
     });
 
+    // Set delete buttons.
     const deleteButtons = mainElement.querySelectorAll('button.btn-secondary');
     console.log(deleteButtons);
 
@@ -103,12 +105,10 @@ const addBundle = async (name) => {
 
         // Add the new bundle.
         const url = `/api/bundle?name=${encodeURIComponent(name)}`;
-        // const res = await fetch(url, {method: 'POST'});
         const res = await fetchJSON(url, 'POST');
-        const resBody = await res.json();
 
         // Merge the new bundle into the original results and show them.
-        bundles.push({id: resBody._id, name});
+        bundles.push({id: res._id, name});
         listBundles(bundles);
 
         showAlert(`Bundle "${name}" created!`, 'success');
