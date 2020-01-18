@@ -54,8 +54,30 @@ function generate_bulk_data {
   return ${exit_code}
 }
 
+function initialize_es {
+  if [ ! -f "${ESCLU}" ]; then
+    echo "esclu doesn't exist!"
+
+    exit 1
+  fi
+
+  echo "Checking ElasticSearch working..."
+  ${ESCLU} -o ${ES_SERVER} get '_cat/indices?v'
+
+  echo "Creating an index named 'books'..."
+  ${ESCLU} -o ${ES_SERVER} create-index --index books
+
+  echo "Importing bulk data..."
+  ${ESCLU} -o ${ES_SERVER} bulk bulk_pg.ldj -i books -t book > bulk_result.json
+
+  echo "Creating an index named 'b4'..."
+  ${ESCLU} -o ${ES_SERVER} create-index --index b4
+}
+
+
 function main {
-  if [ ! -d "${SOURCE_DATA_EPUB}" ]; then
+
+  if [ ! -f "${BULK_DATA}" ]; then
     echo "Downloading source data..."
 
     download_source_data
@@ -67,9 +89,7 @@ function main {
     extract_source_data
 
     check_exit_code
-  fi
 
-  if [ ! -f "${BULK_DATA}" ]; then
     echo "Generating bulk data..."
 
     generate_bulk_data
@@ -77,23 +97,7 @@ function main {
     check_exit_code
   fi
 
-  if [ ! -f "${ESCLU}" ]; then
-    echo "esclu doesn't exist!"
-
-    exit 1
-  fi
-
-  # exit 1
-
-  echo "Checking ElasticSearch working..."
-  ${ESCLU} -o ${ES_SERVER} get '_cat/indices?v'
-
-  echo "Creating an index named 'books'..."
-  ${ESCLU} -o ${ES_SERVER} create-index --index books
-
-  echo "Importing bulk data..."
-  ${ESCLU} -o ${ES_SERVER} bulk bulk_pg.ldj -i books -t book > bulk_result.json
-
+  initialize_es
 }
 
 
