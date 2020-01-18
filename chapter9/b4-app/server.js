@@ -62,17 +62,8 @@ passport.serializeUser((profile, done) => done(null, {
   id: profile.id,
   provider: profile.provider,
 }));
-// passport.serializeUser(function(user, done) {
-//     done(null, user.id);
-// });
 
 passport.deserializeUser((user, done) => done(null, user));
-// passport.deserializeUser(function(id, done) {
-//     db.users.findById(id, function (err, user) {
-//         if (err) { return done(err); }
-//         done(null, user);
-//     });
-// });
 
 
 // https://stackoverflow.com/questions/56297867/req-isauthenticated-is-always-false
@@ -120,12 +111,6 @@ if (isDev) {
 app.use(passport.initialize());
 app.use(passport.session());
 
-// app.post('/auth/local', 
-//   passport.authenticate('local-signup', { failureRedirect: '/', session: true }),
-//   function(req, res) {
-//     res.redirect('/');
-//   });
-
 app.post('/auth/local', function(req, res, next) {
   passport.authenticate('local-signup', function(err, user, info) {
     if (err) { return next(err); }
@@ -136,20 +121,6 @@ app.post('/auth/local', function(req, res, next) {
     });
   })(req, res, next);
 });
-
-// app.post('/auth/local', function(req, res, next) {
-//   passport.authenticate('local-signup', function(err, user, info) {
-//     console.log(err);
-//     console.log(user);
-//     console.log(info);
-//     if (err) { return next(err); }
-//     if (!user) { return res.redirect('/'); }
-//     req.logIn(user, function(err) {
-//       if (err) { return next(err); }
-//       return res.redirect('/');
-//     });
-//   })(req, res, next);
-// });
 
 // Return information about the current user session.
 app.get('/api/session', (req, res) => {

@@ -48,18 +48,6 @@ export const welcome = Handlebars.compile(`
                 </div>
                 <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
             </form>
-            <a href="/auth/facebook" class="btn btn-block btn-social btn-facebook">
-                <span class="fa fa-facebook"></span>
-                Sign in with Facebook
-            </a>
-            <a href="/auth/twitter" class="btn btn-block btn-social btn-twitter">
-                </span class="fa fa-twitter"></span>
-                Sign in with Twitter
-            </a>
-            <a href="/auth/google" class="btn btn-block btn-social btn-google">
-                <span class="fa fa-google"></span>
-                Sign in with Google
-            </a>
         </div>
     </div>
 {{/if}}
