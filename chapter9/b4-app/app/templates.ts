@@ -4,24 +4,19 @@ export const main = Handlebars.compile(`
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
         <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed"
-                data-toggle="collapse" data-target=".navbar-collapse"
-                aria-expanded="false">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#welcome">B4</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="#welcome">B4</a>
         </div>
     </div>
     {{#if session.auth}}
-        <div class="collapse navbar-collapse">
-        <ul class="nav navbar-nav navbar-right">
-        <li><a href="#list-bundles">My Bundles</a></li>
-        <li><a href="/auth/signout">Sign Out</a></li>
-    </ul>
-    </div><!-- /.navbar-collapse -->
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#list-bundles">My Bundles</a></li>
+                <li><a href="/auth/signout">Sign Out</a></li>
+            </ul>
+        </div><!-- /.navbar-collapse -->
     {{/if}}
 </nav>
 <div class="container">
