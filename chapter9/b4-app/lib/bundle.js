@@ -9,7 +9,7 @@ const rp = require('request-promise');
 const getUserKey = ({ user: {provider, id} }) => `${provider}-${id}`;
 
 module.exports = es => {
-    const url = `http://${es.host}:${es.port}/${es.bundles_index}/bundle`;
+    const url = `${es.bundles_index}/bundle`;
 
     const router = express.Router();
 
