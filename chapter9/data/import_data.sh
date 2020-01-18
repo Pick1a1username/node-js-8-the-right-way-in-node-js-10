@@ -9,6 +9,18 @@ declare -r BULK_DATA="bulk_pg.ldj"
 declare -r ES_SERVER="es"
 declare -r ESCLU="../esclu/esclu"
 
+function check_es {
+  # https://superuser.com/questions/272265/getting-curl-to-output-http-status-code
+  
+  local es_status=$(curl -s -o /dev/null -w "%{http_code}" http://${ES_SERVER}:9200)
+
+  if [ "${es_status}" == "200" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 function check_exit_code {
   local exit_code="$?"
   if [ "${exit_code}" != "0" ]; then
@@ -76,6 +88,20 @@ function initialize_es {
 
 
 function main {
+
+  echo "Wating for ElasticSearch..."
+
+  while true; do
+    check_es
+
+    if [ "$?" == "0" ]; then
+      echo "ElasticSearch is running!"
+      break
+    fi
+
+    echo "ElasticSearch is not running. Sleeping for 10 seconds..."
+    sleep 10
+  done
 
   if [ ! -f "${BULK_DATA}" ]; then
     echo "Downloading source data..."
